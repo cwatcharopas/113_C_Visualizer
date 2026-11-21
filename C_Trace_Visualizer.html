@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>C Trace Visualizer · 01418113</title>
-<meta name="generator" content="C Trace Visualizer 1.2.1">
+<meta name="generator" content="C Trace Visualizer 1.2.3">
 <style>
 /* Sarabun font, embedded so every computer and projector shows the same text, also offline.
    Copyright 2018 The Sarabun Project Authors (https://github.com/cadsondemak/Sarabun)
@@ -286,7 +286,8 @@ kbd { font-family: var(--mono); font-size: .82em; border: 1px solid #c9c9cf; bor
 .carr { display: inline-flex; flex-wrap: wrap; align-items: flex-end; gap: .1rem .4rem; }
 .carr .strv { margin: 0 .2rem 0 0; align-self: flex-end; padding-bottom: .2rem; }
 .cell.ch { min-width: 1.5rem; justify-content: center; padding: .05rem .25rem; }
-.arr .ai.fold .cell { border-style: dashed; margin-left: .25rem; border-radius: 4px; }
+.arr .ai.fold { margin-left: .3rem; }
+.arr .ai.fold .cell { border-style: dashed; border-radius: 4px; margin-left: 0; }
 
 .outsw { display: inline-flex; flex-wrap: wrap; gap: .2rem .8rem; justify-content: flex-end; }
 #outnote { font-size: .82rem; color: var(--muted); padding: .25rem .7rem 0; }
@@ -5556,7 +5557,7 @@ int main(void)
     return 0;
 }
 ` },
-// ---------------- extra examples (own programs; checked against Bank113 for overlap) ----------------
+// ---------------- extra examples (own programs) ----------------
 { id: 'x_scanf_newline', week: 0, stdin: '19\ny\n', title: 'scanf ทิ้ง \\n ไว้ใน buffer แล้ว getchar อ่านได้ \\n', note: 'ดูกล่อง stdin หลัง scanf: ⏎ ยังไม่ถูกขีดฆ่า ลองแก้เป็น scanf(" %c", ...) หรืออ่าน \\n ทิ้งก่อน', code: String.raw`#include <stdio.h>
 
 int main(void)
@@ -6207,7 +6208,8 @@ function varRow(name, m, ent, inScope, note) {
   if (sym && sym.adjusted && sym.declaredType) tdesc += ' (เขียนว่า ' + C.typeStr(sym.declaredType, sym.name) + ')';
   const oos = !inScope;
   let h = '<div class="vrow' + (oos ? ' oos' : '') + '"><div class="vname">' + esc(name) + '<span class="vt">' + esc(tdesc) + (note ? ' · ' + note : '') + '</span>' + addrSpan(m.base) + '</div><div>';
-  if (oos) h += '<span class="cell unk" data-o="' + m.id + '" data-off="0">?</span> <span class="note">(ยังไม่อยู่ใน scope) · scope เริ่มบรรทัด ' + (sym ? sym.line : '?') + '</span>';
+  // the memory exists from block entry, so draw the full shape (arrays, structs) with its '?' cells
+  if (oos) h += valueHTML(m, ent, 0, t) + ' <span class="note">(ยังไม่อยู่ใน scope) · scope เริ่มบรรทัด ' + (sym ? sym.line : '?') + '</span>';
   else h += valueHTML(m, ent, 0, t);
   return h + '</div></div>';
 }
@@ -6276,20 +6278,25 @@ function charArrayHTML(m, ent, off, t) {
   let h = '<span class="carr">';
   if (z >= 0) h += '<span class="strv">"' + esc(C.bytesToText(s)) + '"</span>';
   h += '<span class="arr">';
-  // show every cell up to the terminator, then fold a run of identical trailing cells
-  let last = n - 1;
-  const same = i => (ent[2][off + i] ? 'v' + ent[1][off + i] : 'u') === (ent[2][off + last] ? 'v' + ent[1][off + last] : 'u');
+  // arrays of up to 20 cells are always shown in full; longer ones fold a run of identical cells
+  // after the terminator, but never a cell that changed in this step
+  const last = n - 1;
+  const key = i => ent[2][off + i] ? 'v' + ent[1][off + i] : 'u';
   let fold = n;
-  if (n > 6) { let k = last; while (k > 0 && same(k - 1)) k--; const f = Math.max(k, z + 1); if (last - f + 1 >= 3) fold = f; }
-  const upto = Math.min(fold, 64);
-  for (let i = 0; i < upto; i++) h += '<span class="ai"><span class="ix">' + i + '</span>' + scalarCell(m, ent, off + i, t.of, true) + '</span>';
-  h += '</span>';
-  if (fold < n) {
-    const v = ent[2][off + last] ? (ent[1][off + last] === 0 ? "'\\0'" : String(ent[1][off + last])) : '?';
-    h += '<span class="ai fold"><span class="ix">' + fold + '–' + last + '</span><span class="cell' + (v === '?' ? ' unk' : '') + '" data-o="' + m.id + '" data-off="' + (off + fold) + '">' + esc(v) + ' ×' + (last - fold + 1) + '</span></span>';
+  if (n > 20) {
+    let k = last; while (k > 0 && key(k - 1) === key(last)) k--;
+    let lastChg = -1; for (let i = 0; i < n; i++) if (S.chg.has(m.id + ':' + (off + i))) lastChg = i;
+    const f = Math.max(k, z + 1, lastChg + 1);
+    if (last - f + 1 >= 3) fold = f;
   }
-  return h + '</span>';
+  for (let i = 0; i < fold; i++) h += '<span class="ai"><span class="ix">' + i + '</span>' + scalarCell(m, ent, off + i, t.of, true) + '</span>';
+  if (fold < n) {
+    const v = ent[2][off + last] ? (ent[1][off + last] === 0 ? '\\0' : charShown(ent[1][off + last])) : '?';
+    h += '<span class="ai fold"><span class="ix">' + fold + '–' + last + '</span><span class="cell ch' + (v === '?' ? ' unk' : '') + '" data-o="' + m.id + '" data-off="' + (off + fold) + '" title="ช่อง ' + fold + ' ถึง ' + last + ' มีค่าเดียวกันทั้งหมด">' + esc(v) + ' ×' + (last - fold + 1) + '</span></span>';
+  }
+  return h + '</span></span>';
 }
+function charShown(b) { return b >= 32 && b < 127 ? String.fromCharCode(b) : b === 10 ? '\\n' : b === 9 ? '\\t' : String(b > 127 ? b - 256 : b); }
 function structHTML(m, ent, off, t) {
   let h = '<span class="sbox">';
   for (const f of t.fields) h += '<span class="fn">.' + esc(f.name) + '</span><span>' + valueHTML(m, ent, off + f.off, f.type) + '</span>';
