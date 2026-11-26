@@ -222,6 +222,7 @@ kbd{font-family:var(--mono);border:1px solid var(--line);border-radius:4px;paddi
   <h2 id="helpT" style="margin:0">วิธีใช้</h2>
   <h3>สัญลักษณ์</h3>
   <p>J(θ) คือ cost function (ความผิดพลาดของโมเดล) θ คือพารามิเตอร์ของโมเดล θ⁽ᵏ⁾ คือค่า θ หลังอัปเดตครั้งที่ k (θ⁽⁰⁾ = จุดเริ่ม) α คือ learning rate และ x⁽ⁱ⁾, y⁽ⁱ⁾ คือข้อมูลจุดที่ i (i = 1 … n) ทุกฉากใช้ J แบบค่าเฉลี่ย: J = 1/(2n)·Σ(ŷ⁽ⁱ⁾ − y⁽ⁱ⁾)² และ mini-batch ขนาด m ใช้ 1/(2m) กับจุดใน batch</p>
+  <p>วิธีเลือกข้อมูลต่อการอัปเดตหนึ่งครั้ง: <b>Full-batch</b> ใช้ข้อมูลทั้งหมด n จุด (บางตำราเรียกว่า Batch GD), <b>Mini-batch</b> ใช้ m จุด, <b>SGD</b> ใช้ 1 จุด ส่วนคำว่า batch ตัวเล็กในเครื่องมือหมายถึงชุดข้อมูลที่ใช้ในรอบนั้น</p>
   <h3>แต่ละรอบมีสองขั้น</h3>
   <p><b style="color:var(--pre-ink)">▷ สีเหลือง</b>: คำนวณ ∇J ที่ θ⁽ᵏ⁻¹⁾ แล้วคำนวณก้าว Δθ ลูกศรเส้นประบนภาพคือก้าวที่<em>กำลังจะ</em>ขยับ ยังไม่ได้ θ⁽ᵏ⁾</p>
   <p><b style="color:var(--done-ink)">✔ สีเขียว</b>: ได้ θ⁽ᵏ⁾ = θ⁽ᵏ⁻¹⁾ − α∇J แล้ว พร้อม J ก่อนและหลัง ปิดสวิตช์ “แสดงขั้นคำนวณ ∇J” แล้วแต่ละรอบเหลือขั้นสีเขียวขั้นเดียว แต่แผง “การคำนวณในขั้นนี้” ยังแสดงครบทุกบรรทัด</p>
@@ -329,7 +330,7 @@ const OPT={
 const DEF_HP={gd:{lr:.1},momentum:{lr:.05,beta:.9},nesterov:{lr:.05,beta:.9},rmsprop:{lr:.05,rho:.9},adam:{lr:.1,b1:.9,b2:.999}};
 const COLORS=['#e63946','#f0a202','#8338ec','#06a77d','#3a86ff','#d62f8a'];
 const SHAPES=['circle','square','triangle','diamond','hex','cross'];
-const BATCH={all:'Batch',mb:'Mini-batch',sgd:'SGD'};
+const BATCH={all:'Full-batch',mb:'Mini-batch',sgd:'SGD'};
 
 /* ---------- scenarios ---------- */
 const G=[['g0','เทรนโมเดลตามสไลด์ (ŷ = θx และ ŷ = θ₁x₁ + θ₂x₂)'],['g3','เทรนโมเดลจากข้อมูล (เพิ่มเติม)'],['g1','J(θ) หนึ่งพารามิเตอร์ (ฟังก์ชันสาธิต)'],['g2','J(θ₁, θ₂) สองพารามิเตอร์ (ฟังก์ชันสาธิต)']];
@@ -337,23 +338,23 @@ const SCN=[
 {id:'slide-theta-x',grp:'g0',title:'ŷ = θx · J(θ) จากข้อมูล 20 จุด',kind:'lin',feat:'x',pn:['θ'],data:D1,
  start:[6],iters:30,on:['gd'],hp:{gd:{lr:.01},momentum:{lr:.005,beta:.9},adam:{lr:.5}},batches:['all'],mb:5,shuffle:true,
  note:'ตรงกับสไลด์ Gradient Descent: แต่ละ θ คือหนึ่งโมเดล ŷ = θx และมี error J(θ) หนึ่งค่า กราฟคือ J(θ) ของข้อมูลทั้งหมด ลูกบอลเริ่มที่ θ⁽⁰⁾ แล้วค่อย ๆ เลื่อนลงหา global minimum ดูเส้น ŷ = θx ขยับไปพร้อมกันในแท็บ “ข้อมูลและโมเดล”',
- presets:[{t:'α = 0.002 · ช้า',hp:{gd:{lr:.002}}},{t:'α = 0.01',hp:{gd:{lr:.01}}},{t:'α = 0.04 · แกว่งข้ามแต่ลู่เข้า',hp:{gd:{lr:.04}}},{t:'α = 0.055 · ลู่ออก',hp:{gd:{lr:.055}}},{t:'Batch เทียบ SGD และ Mini-batch',batches:['all','mb','sgd']}]},
+ presets:[{t:'α = 0.002 · ช้า',hp:{gd:{lr:.002}}},{t:'α = 0.01',hp:{gd:{lr:.01}}},{t:'α = 0.04 · แกว่งข้ามแต่ลู่เข้า',hp:{gd:{lr:.04}}},{t:'α = 0.055 · ลู่ออก',hp:{gd:{lr:.055}}},{t:'Full-batch เทียบ SGD และ Mini-batch',batches:['all','mb','sgd']}]},
 {id:'slide-hand-1p',grp:'g0',title:'ŷ = θx · ข้อมูล 4 จุด สำหรับคิดมือ',kind:'lin',feat:'x',pn:['θ'],data:H1,
  start:[0],iters:12,on:['gd'],hp:{gd:{lr:.1}},batches:['all'],mb:2,shuffle:false,
  note:'ข้อมูลเล็กพอให้นิสิตคิดมือได้ แผงการคำนวณแสดงตารางทีละจุด: ŷ⁽ⁱ⁾ = θx⁽ⁱ⁾, e⁽ⁱ⁾ = ŷ⁽ⁱ⁾ − y⁽ⁱ⁾ และ e⁽ⁱ⁾·x⁽ⁱ⁾ แถวสุดท้ายคือค่าเฉลี่ย = dJ/dθ ใช้ตรวจคำตอบของ θ⁽¹⁾, θ⁽²⁾, … ได้ทันที',
- presets:[{t:'Batch (ใช้ทั้ง 4 จุด)',batches:['all']},{t:'SGD ตามลำดับ i = 1, 2, 3, 4',batches:['sgd'],shuffle:false},{t:'Mini-batch m = 2',batches:['mb'],mb:2,shuffle:false},{t:'เทียบทั้งสามแบบ',batches:['all','mb','sgd'],shuffle:false}]},
+ presets:[{t:'Full-batch (ใช้ทั้ง 4 จุด)',batches:['all']},{t:'SGD ตามลำดับ i = 1, 2, 3, 4',batches:['sgd'],shuffle:false},{t:'Mini-batch m = 2',batches:['mb'],mb:2,shuffle:false},{t:'เทียบทั้งสามแบบ',batches:['all','mb','sgd'],shuffle:false}]},
 {id:'slide-hand-2p',grp:'g0',title:'ŷ = θ₁x₁ + θ₂x₂ · ข้อมูล 4 จุด สำหรับคิดมือ',kind:'lin',feat:'x1x2',pn:['θ₁','θ₂'],data:H2,
  start:[0,0],iters:40,on:['gd'],hp:{gd:{lr:.2},momentum:{lr:.1,beta:.9},adam:{lr:.3}},batches:['all'],mb:2,shuffle:false,
  note:'โมเดลสองพารามิเตอร์ตามสไลด์ ข้อมูลสร้างจาก y = 2x₁ + 3x₂ พอดี จุดต่ำสุดจึงอยู่ที่ θ = (2, 3) และ J = 0 ตารางทีละจุดในแผงการคำนวณแสดงทั้ง e⁽ⁱ⁾·x₁⁽ⁱ⁾ และ e⁽ⁱ⁾·x₂⁽ⁱ⁾ ซึ่งเฉลี่ยแล้วเป็น ∂J/∂θ₁ และ ∂J/∂θ₂',
- presets:[{t:'Batch α = 0.2',batches:['all']},{t:'SGD ตามลำดับ (สไลด์ 37–38)',batches:['sgd'],shuffle:false},{t:'Mini-batch m = 2 (สไลด์ 39)',batches:['mb'],mb:2,shuffle:false},{t:'α = 0.9 · ซิกแซก',hp:{gd:{lr:.9}}},{t:'α = 1.05 · ลู่ออก',hp:{gd:{lr:1.05}}}]},
+ presets:[{t:'Full-batch α = 0.2',batches:['all']},{t:'SGD ตามลำดับ (สไลด์ 37–38)',batches:['sgd'],shuffle:false},{t:'Mini-batch m = 2 (สไลด์ 39)',batches:['mb'],mb:2,shuffle:false},{t:'α = 0.9 · ซิกแซก',hp:{gd:{lr:.9}}},{t:'α = 1.05 · ลู่ออก',hp:{gd:{lr:1.05}}}]},
 {id:'slide-two-features',grp:'g0',title:'ŷ = θ₁x₁ + θ₂x₂ · ข้อมูล 30 จุด (พื้นผิวแบบในสไลด์)',kind:'lin',feat:'x1x2',pn:['θ₁','θ₂'],data:D2,
  start:[6,4],iters:150,on:['gd'],hp:{gd:{lr:.03},momentum:{lr:.01,beta:.9},nesterov:{lr:.01,beta:.9},rmsprop:{lr:.1,rho:.9},adam:{lr:.5}},batches:['all'],mb:6,shuffle:true,v3:true,
- note:'x₁ กับ x₂ สัมพันธ์กัน พื้นผิว J(θ₁, θ₂) จึงเป็นหุบยาวเอียงแบบในสไลด์ θ⁽⁰⁾ อยู่สูงบนผนังหุบ ก้าวแรก ๆ ลงหุบเร็ว แล้วคืบไปตามก้นหุบช้า ลองสลับมุมมอง 3 มิติ / เส้นระดับ และเทียบ Batch, SGD, Mini-batch',
- presets:[{t:'Batch GD α = 0.03',batches:['all']},{t:'α = 0.1 · ก้าวใหญ่',batches:['all'],hp:{gd:{lr:.1}}},{t:'SGD (สไลด์ 37–38)',batches:['sgd'],hp:{gd:{lr:.02}}},{t:'Mini-batch m = 6 (สไลด์ 39)',batches:['mb']},{t:'เทียบ Batch · Mini-batch · SGD',batches:['all','mb','sgd'],hp:{gd:{lr:.02}}},{t:'α = 0.19 · ลู่ออก',batches:['all'],hp:{gd:{lr:.19}}},{t:'GD เทียบ Momentum · Adam',batches:['all'],on:['gd','momentum','adam']}]},
-{id:'linreg-batch',grp:'g3',title:'ŷ = θ₁x + θ₀ · Batch / Mini-batch / SGD',kind:'lin',feat:'xb',pn:['θ₁','θ₀'],scale:true,data:DB,
+ note:'x₁ กับ x₂ สัมพันธ์กัน พื้นผิว J(θ₁, θ₂) จึงเป็นหุบยาวเอียงแบบในสไลด์ θ⁽⁰⁾ อยู่สูงบนผนังหุบ ก้าวแรก ๆ ลงหุบเร็ว แล้วคืบไปตามก้นหุบช้า ลองสลับมุมมอง 3 มิติ / เส้นระดับ และเทียบ Full-batch, SGD, Mini-batch',
+ presets:[{t:'Full-batch GD α = 0.03',batches:['all']},{t:'α = 0.1 · ก้าวใหญ่',batches:['all'],hp:{gd:{lr:.1}}},{t:'SGD (สไลด์ 37–38)',batches:['sgd'],hp:{gd:{lr:.02}}},{t:'Mini-batch m = 6 (สไลด์ 39)',batches:['mb']},{t:'เทียบ Full-batch · Mini-batch · SGD',batches:['all','mb','sgd'],hp:{gd:{lr:.02}}},{t:'α = 0.19 · ลู่ออก',batches:['all'],hp:{gd:{lr:.19}}},{t:'GD เทียบ Momentum · Adam',batches:['all'],on:['gd','momentum','adam']}]},
+{id:'linreg-batch',grp:'g3',title:'ŷ = θ₁x + θ₀ · Full-batch / Mini-batch / SGD',kind:'lin',feat:'xb',pn:['θ₁','θ₀'],scale:true,data:DB,
  start:[0,0],iters:80,on:['gd'],hp:{gd:{lr:.1}},batches:['all','mb','sgd'],mb:8,shuffle:true,
- note:'โมเดลมี bias θ₀ กับข้อมูล 40 จุด (x ปรับสเกลแล้ว) พื้นหลังคือ J ของข้อมูลทั้งหมด Batch ใช้ทั้ง 40 จุดต่อการอัปเดตหนึ่งครั้ง Mini-batch ใช้ 8 จุด SGD ใช้ 1 จุด หนึ่ง epoch = ใช้ข้อมูลครบหนึ่งรอบ',
- presets:[{t:'เทียบทั้งสามแบบ',batches:['all','mb','sgd']},{t:'Batch อย่างเดียว',batches:['all']},{t:'SGD อย่างเดียว',batches:['sgd']},{t:'SGD α = 0.02 · สั่นน้อยลง',batches:['sgd'],hp:{gd:{lr:.02}},iters:200},{t:'Mini-batch: GD เทียบ Adam',batches:['mb'],on:['gd','adam'],hp:{adam:{lr:.5}}}]},
+ note:'โมเดลมี bias θ₀ กับข้อมูล 40 จุด (x ปรับสเกลแล้ว) พื้นหลังคือ J ของข้อมูลทั้งหมด Full-batch ใช้ทั้ง 40 จุดต่อการอัปเดตหนึ่งครั้ง Mini-batch ใช้ 8 จุด SGD ใช้ 1 จุด หนึ่ง epoch = ใช้ข้อมูลครบหนึ่งรอบ',
+ presets:[{t:'เทียบทั้งสามแบบ',batches:['all','mb','sgd']},{t:'Full-batch อย่างเดียว',batches:['all']},{t:'SGD อย่างเดียว',batches:['sgd']},{t:'SGD α = 0.02 · สั่นน้อยลง',batches:['sgd'],hp:{gd:{lr:.02}},iters:200},{t:'Mini-batch: GD เทียบ Adam',batches:['mb'],on:['gd','adam'],hp:{adam:{lr:.5}}}]},
 {id:'linreg-scaling',grp:'g3',title:'ŷ = θ₁x + θ₀ · ผลของการปรับสเกล feature',kind:'lin',feat:'xb',pn:['θ₁','θ₀'],scale:false,data:DB,
  start:[0,0],iters:80,on:['gd'],hp:{gd:{lr:.05},adam:{lr:.5}},batches:['all'],mb:8,shuffle:true,
  note:'x มีค่า 0–10 ไม่ได้ปรับสเกล J จึงเป็นหุบแคบเอียง θ₁ ไวกว่า θ₀ มาก α ต้องเล็กพอสำหรับแนว θ₁ แนว θ₀ จึงคืบช้า เปิด “ปรับสเกล x” แล้วหุบจะกลม',
@@ -361,7 +362,7 @@ const SCN=[
 {id:'logreg',grp:'g3',title:'Logistic regression · เส้นแบ่งสองกลุ่ม',kind:'log',pn:['θ₁','θ₂'],
  start:[-3,3],iters:60,on:['gd'],hp:{gd:{lr:.5},momentum:{lr:.2,beta:.9},adam:{lr:.2}},batches:['all'],mb:8,shuffle:true,
  note:'จำแนกสองกลุ่มด้วย ŷ = σ(θ₁x₁ + θ₂x₂) เส้นแบ่งคือ θ·x = 0 และตั้งฉากกับเวกเตอร์ θ เริ่มจาก θ ที่ชี้ผิดทาง แล้วดูเส้นแบ่งหมุนเข้าที่',
- presets:[{t:'Batch GD',batches:['all']},{t:'Batch เทียบ SGD',batches:['all','sgd']},{t:'เทียบ GD · Momentum · Adam',batches:['all'],on:['gd','momentum','adam']}]},
+ presets:[{t:'Full-batch GD',batches:['all']},{t:'Full-batch เทียบ SGD',batches:['all','sgd']},{t:'เทียบ GD · Momentum · Adam',batches:['all'],on:['gd','momentum','adam']}]},
 {id:'lr-parabola',grp:'g1',title:'J(θ) = θ² · ขนาดของ learning rate',kind:'fn',pn:['θ'],ftex:'J(θ) = θ²',
  f:t=>t[0]**2,g:t=>[2*t[0]],gx:(t,g)=>`dJ/dθ = 2θ = 2·${P(t[0])} = ${F(g[0])}`,
  dom:[-3,3],start:[2.5],iters:20,on:['gd'],hp:{gd:{lr:.1}},mins:[[0]],
@@ -540,7 +541,7 @@ function evalLines(){
   const r=recOf(R,s);if(!r)return E('warn',`${R.name} หยุดตั้งแต่รอบที่ ${R.div} เพราะลู่ออก`);
   const showPre=s.ph==='pre'||!S.pre,k=s.k;
   if(showPre){
-    if(M.n){out.push(E('',R.m>=M.n?`ใช้ข้อมูลทั้งหมด ${M.n} จุด (Batch) · epoch ${r.ep}`:`${R.m===1?'SGD ใช้ 1 จุด':'mini-batch '+R.m+' จุด'}: i = ${r.idx.map(i=>i+1).join(', ')} · epoch ${r.ep} batch ที่ ${r.inEp}/${R.perEpoch}`,'batch'))}
+    if(M.n){out.push(E('',R.m>=M.n?`ใช้ข้อมูลทั้งหมด ${M.n} จุด (Full-batch) · epoch ${r.ep}`:`${R.m===1?'SGD ใช้ 1 จุด':'mini-batch '+R.m+' จุด'}: i = ${r.idx.map(i=>i+1).join(', ')} · epoch ${r.ep} batch ที่ ${r.inEp}/${R.perEpoch}`,'batch'))}
     out.push(E('m',`${TH(k-1)} = ${V(r.th)},  J(${TH(k-1)}) = ${F(r.L)}`,'ตอนนี้'));
     if(r.look)out.push(E('m',`มองล่วงหน้า θ̃ = θ − α·β·v = ${V(r.look)} แล้วคิด ∇J ที่ θ̃`,'Nesterov'));
     out.push(pointTable(R,r));
@@ -942,7 +943,7 @@ function buildForm(){
     <td><input type="number" step="any" min="0" data-hp="${k}.lr" value="${h.lr}" aria-label="α ของ ${O.name}"></td>
     <td>${O.ps.map(([p,l])=>`<label>${l} <input type="number" step="any" min="0" max="0.99999" data-hp="${k}.${p}" value="${h[p]}"></label>`).join(' ')||'<span class="hint">–</span>'}</td><td class="f">${O.rule}</td></tr>`}).join('');
   const isD=sc.kind!=='fn';$('batchRow').hidden=!isD;
-  if(isD){const n=sc.kind==='lin'?c.data.length:40;$('batchRow').innerHTML=`<span>batch</span>`+['all','mb','sgd'].map(b=>`<label><input type="checkbox" data-b="${b}" ${c.batches.includes(b)?'checked':''}> ${b==='all'?`Batch (ทั้งหมด ${n} จุด)`:b==='mb'?'Mini-batch':'SGD (1 จุด)'}</label>`).join('')+
+  if(isD){const n=sc.kind==='lin'?c.data.length:40;$('batchRow').innerHTML=`<span>batch</span>`+['all','mb','sgd'].map(b=>`<label><input type="checkbox" data-b="${b}" ${c.batches.includes(b)?'checked':''}> ${b==='all'?`Full-batch (ทั้งหมด ${n} จุด)`:b==='mb'?'Mini-batch':'SGD (1 จุด)'}</label>`).join('')+
     `<label>ขนาด mini-batch m = <input type="number" min="1" max="${n}" step="1" id="mbSize" value="${c.mb}"></label>`+
     `<label title="ปิด = ใช้ข้อมูลตามลำดับ i = 1, 2, … เหมือนสไลด์ SGD"><input type="checkbox" id="shufSw" ${c.shuffle?'checked':''}> สุ่มลำดับข้อมูลทุก epoch</label><button class="btn" id="seedBtn" type="button">สุ่มลำดับใหม่</button>`+
     (sc.feat==='xb'?`<label><input type="checkbox" id="scaleSw" ${c.scale?'checked':''}> ปรับสเกล x (standardize)</label>`:'')}
@@ -959,7 +960,7 @@ function readForm(){const c=S.cfg;
   if(S.scn.kind==='lin'){const k=S.scn.feat==='x1x2'?3:2,r=parseData($('dataText').value,k);
     if(r.err){$('dataErr').textContent=r.err+' · ยังใช้ข้อมูลชุดก่อนหน้าอยู่';$('dataText').classList.add('bad');return true}
     $('dataErr').textContent='';$('dataText').classList.remove('bad');c.data=r.rows;$('dataHint').textContent=`หนึ่งบรรทัดต่อหนึ่งจุด: ${FEAT[S.scn.feat].cols} · n = ${r.rows.length}`;
-    const lb=document.querySelector('[data-b="all"]');if(lb)lb.parentNode.lastChild.textContent=` Batch (ทั้งหมด ${r.rows.length} จุด)`;$('mbSize').max=r.rows.length}
+    const lb=document.querySelector('[data-b="all"]');if(lb)lb.parentNode.lastChild.textContent=` Full-batch (ทั้งหมด ${r.rows.length} จุด)`;$('mbSize').max=r.rows.length}
   c.mb=Math.min(c.mb,S.scn.kind==='lin'?c.data.length:40);
   return true}
 let deb=0;
